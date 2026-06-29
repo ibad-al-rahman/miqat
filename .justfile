@@ -23,13 +23,21 @@ apple release="": \
 [macos]
 apple-build: apple-build-rslib apple-create-fat-simulator-lib
 
+# `-Zbuild-std` recompiles `std` with `panic=immediate-abort` (matching the
+# crate's `panic = "abort"` profile), which drops the unwinding/backtrace/
+# formatting machinery that otherwise bloats the static archive (~33M -> ~17M
+# per arch). Requires nightly + the `rust-src` component, so these builds invoke
+# `cargo +nightly` explicitly; the rest of the project stays on stable.
+BUILD_STD_FLAGS := "-Z build-std=std,panic_abort"
+BUILD_STD_RUSTFLAGS := "-Zunstable-options -Cpanic=immediate-abort"
+
 [private]
 [macos]
 apple-build-rslib:
-	@echo "Building Rust lib"
-	@cargo build --lib --release --target x86_64-apple-ios
-	@cargo build --lib --release --target aarch64-apple-ios-sim
-	@cargo build --lib --release --target aarch64-apple-ios
+	@echo "Building Rust lib (build-std, panic=immediate-abort)"
+	RUSTFLAGS="{{BUILD_STD_RUSTFLAGS}}" cargo +nightly build --lib --release --target x86_64-apple-ios {{BUILD_STD_FLAGS}}
+	RUSTFLAGS="{{BUILD_STD_RUSTFLAGS}}" cargo +nightly build --lib --release --target aarch64-apple-ios-sim {{BUILD_STD_FLAGS}}
+	RUSTFLAGS="{{BUILD_STD_RUSTFLAGS}}" cargo +nightly build --lib --release --target aarch64-apple-ios {{BUILD_STD_FLAGS}}
 
 # Combines two static libs to create the simulator fat lib
 [private]

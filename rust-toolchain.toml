@@ -8,7 +8,11 @@
 
 [toolchain]
 channel = "stable"
-components = ["clippy", "rustfmt"]
+# `rust-src` is required by the Apple `-Zbuild-std` builds (see `.justfile`),
+# which recompile `std` with `panic=immediate-abort` to shrink the static libs.
+# Those recipes invoke nightly explicitly (`cargo +nightly`); the rest of the
+# project (Android, dev, CI) stays on stable.
+components = ["clippy", "rustfmt", "rust-src"]
 targets = [
     # iOS
     "aarch64-apple-ios",
