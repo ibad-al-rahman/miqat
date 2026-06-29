@@ -15,4 +15,7 @@ repository = "https://github.com/ibad-al-rahman/miqat"
 
 [workspace.dependencies]
 uniffi = "0.31.0"
-chrono = "0.4.44"
+chrono = { version = "0.4.44", default-features = false, features = [
+    "std",
+    "clock",
+] }
