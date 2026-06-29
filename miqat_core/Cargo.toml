@@ -11,7 +11,7 @@ readme.workspace = true
 license.workspace = true
 
 [dependencies]
-calendrical_calculations = "0.2.3"
+calendrical_calculations = "0.2.4"
 chrono.workspace = true
 
 [dev-dependencies]
