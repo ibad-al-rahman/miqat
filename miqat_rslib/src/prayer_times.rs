@@ -1,4 +1,5 @@
 use crate::hijri::HijriDate;
+use crate::models::parameters::CalculationParameters;
 use chrono::DateTime;
 use miqat::Coordinates;
 use miqat::Method;
@@ -30,6 +31,19 @@ impl PrayerTimes {
             .unwrap()
             .date_naive();
         let inner = miqat::PrayerTimes::computed(date, coordinates, method.parameters());
+        Self::from_inner(inner, date)
+    }
+
+    #[uniffi::constructor]
+    pub fn from_parameters(
+        date_utc_timestamp_secs: i64,
+        coordinates: Coordinates,
+        parameters: CalculationParameters,
+    ) -> Self {
+        let date = DateTime::from_timestamp_secs(date_utc_timestamp_secs)
+            .unwrap()
+            .date_naive();
+        let inner = miqat::PrayerTimes::computed(date, coordinates, (&parameters).into());
         Self::from_inner(inner, date)
     }
 
@@ -80,6 +94,32 @@ impl PrayerTimes {
 
     pub fn hijri_date(&self) -> HijriDate {
         self.hijri_date
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::models::parameters::parameters_for_method;
+
+    #[test]
+    fn from_parameters_matches_from_method() {
+        // 2024-01-01T00:00:00Z
+        let timestamp = 1_704_067_200;
+        let beirut = Coordinates {
+            latitude: 33.8938,
+            longitude: 35.5018,
+        };
+
+        let via_method = PrayerTimes::from_method(timestamp, beirut, Method::MuslimWorldLeague);
+        let params = parameters_for_method(Method::MuslimWorldLeague);
+        let via_params = PrayerTimes::from_parameters(timestamp, beirut, params);
+
+        assert_eq!(via_params.fajr(), via_method.fajr());
+        assert_eq!(via_params.dhuhr(), via_method.dhuhr());
+        assert_eq!(via_params.asr(), via_method.asr());
+        assert_eq!(via_params.maghrib(), via_method.maghrib());
+        assert_eq!(via_params.ishaa(), via_method.ishaa());
     }
 }
 
