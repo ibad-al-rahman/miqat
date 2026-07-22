@@ -765,6 +765,16 @@ public static func fromMethod(dateUtcTimestampSecs: Int64, coordinates: Coordina
 })
 }
     
+public static func fromParameters(dateUtcTimestampSecs: Int64, coordinates: Coordinates, parameters: CalculationParameters) -> PrayerTimes  {
+    return try!  FfiConverterTypePrayerTimes_lift(try! rustCall() {
+    uniffi_miqat_fn_constructor_prayertimes_from_parameters(
+        FfiConverterInt64.lower(dateUtcTimestampSecs),
+        FfiConverterTypeCoordinates_lower(coordinates),
+        FfiConverterTypeCalculationParameters_lower(parameters),$0
+    )
+})
+}
+    
 public static func fromPrecomputed(dateUtcTimestampSecs: Int64, provider: Provider) -> PrayerTimes  {
     return try!  FfiConverterTypePrayerTimes_lift(try! rustCall() {
     uniffi_miqat_fn_constructor_prayertimes_from_precomputed(
@@ -902,6 +912,129 @@ public func FfiConverterTypePrayerTimes_lower(_ value: PrayerTimes) -> UInt64 {
 }
 
 
+
+
+/**
+ * Flat, FFI-friendly view of [`miqat::Parameters`].
+ *
+ * Ishaa is exposed as a plain angle only. Interval-based Ishaa (e.g. Umm al-Qura's
+ * fixed 90 minutes) cannot be expressed here and reads back as `ishaa_angle == 0.0`
+ * when querying such a method via [`parameters_for_method`].
+ */
+public struct CalculationParameters: Equatable, Hashable {
+    /**
+     * Solar angle below the horizon for Fajr, in degrees.
+     */
+    public let fajrAngle: Double
+    /**
+     * Solar angle below the horizon for Ishaa, in degrees.
+     */
+    public let ishaaAngle: Double
+    /**
+     * Juristic school affecting the Asr calculation.
+     */
+    public let mazhab: Mazhab
+    /**
+     * Rule for approximating Fajr and Ishaa at high latitudes.
+     */
+    public let highLatitudeRule: HighLatitudeRule
+    /**
+     * User-supplied per-prayer offsets, in minutes.
+     */
+    public let adjustments: TimeAdjustment
+    /**
+     * Preset per-prayer offsets baked into a method (populated when querying a method).
+     */
+    public let methodAdjustments: TimeAdjustment
+    /**
+     * Output rounding behaviour.
+     */
+    public let rounding: Rounding
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(
+        /**
+         * Solar angle below the horizon for Fajr, in degrees.
+         */fajrAngle: Double, 
+        /**
+         * Solar angle below the horizon for Ishaa, in degrees.
+         */ishaaAngle: Double, 
+        /**
+         * Juristic school affecting the Asr calculation.
+         */mazhab: Mazhab, 
+        /**
+         * Rule for approximating Fajr and Ishaa at high latitudes.
+         */highLatitudeRule: HighLatitudeRule, 
+        /**
+         * User-supplied per-prayer offsets, in minutes.
+         */adjustments: TimeAdjustment, 
+        /**
+         * Preset per-prayer offsets baked into a method (populated when querying a method).
+         */methodAdjustments: TimeAdjustment, 
+        /**
+         * Output rounding behaviour.
+         */rounding: Rounding) {
+        self.fajrAngle = fajrAngle
+        self.ishaaAngle = ishaaAngle
+        self.mazhab = mazhab
+        self.highLatitudeRule = highLatitudeRule
+        self.adjustments = adjustments
+        self.methodAdjustments = methodAdjustments
+        self.rounding = rounding
+    }
+
+    
+
+    
+}
+
+#if compiler(>=6)
+extension CalculationParameters: Sendable {}
+#endif
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeCalculationParameters: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> CalculationParameters {
+        return
+            try CalculationParameters(
+                fajrAngle: FfiConverterDouble.read(from: &buf), 
+                ishaaAngle: FfiConverterDouble.read(from: &buf), 
+                mazhab: FfiConverterTypeMazhab.read(from: &buf), 
+                highLatitudeRule: FfiConverterTypeHighLatitudeRule.read(from: &buf), 
+                adjustments: FfiConverterTypeTimeAdjustment.read(from: &buf), 
+                methodAdjustments: FfiConverterTypeTimeAdjustment.read(from: &buf), 
+                rounding: FfiConverterTypeRounding.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: CalculationParameters, into buf: inout [UInt8]) {
+        FfiConverterDouble.write(value.fajrAngle, into: &buf)
+        FfiConverterDouble.write(value.ishaaAngle, into: &buf)
+        FfiConverterTypeMazhab.write(value.mazhab, into: &buf)
+        FfiConverterTypeHighLatitudeRule.write(value.highLatitudeRule, into: &buf)
+        FfiConverterTypeTimeAdjustment.write(value.adjustments, into: &buf)
+        FfiConverterTypeTimeAdjustment.write(value.methodAdjustments, into: &buf)
+        FfiConverterTypeRounding.write(value.rounding, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeCalculationParameters_lift(_ buf: RustBuffer) throws -> CalculationParameters {
+    return try FfiConverterTypeCalculationParameters.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeCalculationParameters_lower(_ value: CalculationParameters) -> RustBuffer {
+    return FfiConverterTypeCalculationParameters.lower(value)
+}
 
 
 public struct Coordinates: Equatable, Hashable {
@@ -1075,6 +1208,150 @@ public func FfiConverterTypeIslamicEventOccurrence_lift(_ buf: RustBuffer) throw
 public func FfiConverterTypeIslamicEventOccurrence_lower(_ value: IslamicEventOccurrence) -> RustBuffer {
     return FfiConverterTypeIslamicEventOccurrence.lower(value)
 }
+
+
+public struct TimeAdjustment: Equatable, Hashable {
+    public let fajr: Int64
+    public let sunrise: Int64
+    public let dhuhr: Int64
+    public let asr: Int64
+    public let maghrib: Int64
+    public let ishaa: Int64
+
+    // Default memberwise initializers are never public by default, so we
+    // declare one manually.
+    public init(fajr: Int64, sunrise: Int64, dhuhr: Int64, asr: Int64, maghrib: Int64, ishaa: Int64) {
+        self.fajr = fajr
+        self.sunrise = sunrise
+        self.dhuhr = dhuhr
+        self.asr = asr
+        self.maghrib = maghrib
+        self.ishaa = ishaa
+    }
+
+    
+
+    
+}
+
+#if compiler(>=6)
+extension TimeAdjustment: Sendable {}
+#endif
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeTimeAdjustment: FfiConverterRustBuffer {
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> TimeAdjustment {
+        return
+            try TimeAdjustment(
+                fajr: FfiConverterInt64.read(from: &buf), 
+                sunrise: FfiConverterInt64.read(from: &buf), 
+                dhuhr: FfiConverterInt64.read(from: &buf), 
+                asr: FfiConverterInt64.read(from: &buf), 
+                maghrib: FfiConverterInt64.read(from: &buf), 
+                ishaa: FfiConverterInt64.read(from: &buf)
+        )
+    }
+
+    public static func write(_ value: TimeAdjustment, into buf: inout [UInt8]) {
+        FfiConverterInt64.write(value.fajr, into: &buf)
+        FfiConverterInt64.write(value.sunrise, into: &buf)
+        FfiConverterInt64.write(value.dhuhr, into: &buf)
+        FfiConverterInt64.write(value.asr, into: &buf)
+        FfiConverterInt64.write(value.maghrib, into: &buf)
+        FfiConverterInt64.write(value.ishaa, into: &buf)
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeTimeAdjustment_lift(_ buf: RustBuffer) throws -> TimeAdjustment {
+    return try FfiConverterTypeTimeAdjustment.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeTimeAdjustment_lower(_ value: TimeAdjustment) -> RustBuffer {
+    return FfiConverterTypeTimeAdjustment.lower(value)
+}
+
+// Note that we don't yet support `indirect` for enums.
+// See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
+
+public enum HighLatitudeRule: Equatable, Hashable {
+    
+    case middleOfTheNight
+    case seventhOfTheNight
+    case twilightAngle
+
+
+
+
+
+}
+
+#if compiler(>=6)
+extension HighLatitudeRule: Sendable {}
+#endif
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeHighLatitudeRule: FfiConverterRustBuffer {
+    typealias SwiftType = HighLatitudeRule
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> HighLatitudeRule {
+        let variant: Int32 = try readInt(&buf)
+        switch variant {
+        
+        case 1: return .middleOfTheNight
+        
+        case 2: return .seventhOfTheNight
+        
+        case 3: return .twilightAngle
+        
+        default: throw UniffiInternalError.unexpectedEnumCase
+        }
+    }
+
+    public static func write(_ value: HighLatitudeRule, into buf: inout [UInt8]) {
+        switch value {
+        
+        
+        case .middleOfTheNight:
+            writeInt(&buf, Int32(1))
+        
+        
+        case .seventhOfTheNight:
+            writeInt(&buf, Int32(2))
+        
+        
+        case .twilightAngle:
+            writeInt(&buf, Int32(3))
+        
+        }
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeHighLatitudeRule_lift(_ buf: RustBuffer) throws -> HighLatitudeRule {
+    return try FfiConverterTypeHighLatitudeRule.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeHighLatitudeRule_lower(_ value: HighLatitudeRule) -> RustBuffer {
+    return FfiConverterTypeHighLatitudeRule.lower(value)
+}
+
 
 // Note that we don't yet support `indirect` for enums.
 // See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
@@ -1628,6 +1905,80 @@ public func FfiConverterTypeProviderCity_lower(_ value: ProviderCity) -> RustBuf
 }
 
 
+// Note that we don't yet support `indirect` for enums.
+// See https://github.com/mozilla/uniffi-rs/issues/396 for further discussion.
+
+public enum Rounding: Equatable, Hashable {
+    
+    case nearest
+    case ceil
+    case none
+
+
+
+
+
+}
+
+#if compiler(>=6)
+extension Rounding: Sendable {}
+#endif
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public struct FfiConverterTypeRounding: FfiConverterRustBuffer {
+    typealias SwiftType = Rounding
+
+    public static func read(from buf: inout (data: Data, offset: Data.Index)) throws -> Rounding {
+        let variant: Int32 = try readInt(&buf)
+        switch variant {
+        
+        case 1: return .nearest
+        
+        case 2: return .ceil
+        
+        case 3: return .none
+        
+        default: throw UniffiInternalError.unexpectedEnumCase
+        }
+    }
+
+    public static func write(_ value: Rounding, into buf: inout [UInt8]) {
+        switch value {
+        
+        
+        case .nearest:
+            writeInt(&buf, Int32(1))
+        
+        
+        case .ceil:
+            writeInt(&buf, Int32(2))
+        
+        
+        case .none:
+            writeInt(&buf, Int32(3))
+        
+        }
+    }
+}
+
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeRounding_lift(_ buf: RustBuffer) throws -> Rounding {
+    return try FfiConverterTypeRounding.lift(buf)
+}
+
+#if swift(>=5.8)
+@_documentation(visibility: private)
+#endif
+public func FfiConverterTypeRounding_lower(_ value: Rounding) -> RustBuffer {
+    return FfiConverterTypeRounding.lower(value)
+}
+
+
 #if swift(>=5.8)
 @_documentation(visibility: private)
 #endif
@@ -1712,6 +2063,19 @@ public func eventsForGregorianYear(gregorianYear: Int32) -> [IslamicEventOccurre
     )
 })
 }
+/**
+ * Resolves a preset [`Method`] into its concrete calculation parameters.
+ *
+ * For example, `Method::MuslimWorldLeague` yields `fajr_angle: 18.0`,
+ * `ishaa_angle: 17.0`, and `method_adjustments.dhuhr: 1`.
+ */
+public func parametersForMethod(method: Method) -> CalculationParameters  {
+    return try!  FfiConverterTypeCalculationParameters_lift(try! rustCall() {
+    uniffi_miqat_fn_func_parameters_for_method(
+        FfiConverterTypeMethod_lower(method),$0
+    )
+})
+}
 
 private enum InitializationResult {
     case ok
@@ -1729,6 +2093,9 @@ private let initializationResult: InitializationResult = {
         return InitializationResult.contractVersionMismatch
     }
     if (uniffi_miqat_checksum_func_events_for_gregorian_year() != 8850) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_miqat_checksum_func_parameters_for_method() != 40359) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_miqat_checksum_method_hijridateinfo_date() != 23426) {
@@ -1774,6 +2141,9 @@ private let initializationResult: InitializationResult = {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_miqat_checksum_constructor_prayertimes_from_method() != 953) {
+        return InitializationResult.apiChecksumMismatch
+    }
+    if (uniffi_miqat_checksum_constructor_prayertimes_from_parameters() != 30632) {
         return InitializationResult.apiChecksumMismatch
     }
     if (uniffi_miqat_checksum_constructor_prayertimes_from_precomputed() != 28190) {

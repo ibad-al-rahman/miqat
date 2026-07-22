@@ -28,9 +28,12 @@ pub use crate::astronomy::unit::Stride;
 pub use crate::hijri::HijriDate;
 pub use crate::hijri::IslamicEvent;
 pub use crate::models::adjustments::TimeAdjustment;
+pub use crate::models::high_altitude_rule::HighLatitudeRule;
+pub use crate::models::ishaa_parameter::IshaaParameter;
 pub use crate::models::mazhab::Mazhab;
 pub use crate::models::method::Method;
 pub use crate::models::parameters::Parameters;
+pub use crate::models::rounding::Rounding;
 pub use crate::models::prayer::Prayer;
 pub use crate::prayer_times::PrayerTimes;
 pub use crate::precomputed::provider::{Provider, ProviderCity};
@@ -58,11 +61,17 @@ pub mod prelude {
     #[doc(no_inline)]
     pub use crate::models::adjustments::TimeAdjustment;
     #[doc(no_inline)]
+    pub use crate::models::high_altitude_rule::HighLatitudeRule;
+    #[doc(no_inline)]
+    pub use crate::models::ishaa_parameter::IshaaParameter;
+    #[doc(no_inline)]
     pub use crate::models::mazhab::Mazhab;
     #[doc(no_inline)]
     pub use crate::models::method::Method;
     #[doc(no_inline)]
     pub use crate::models::parameters::Parameters;
+    #[doc(no_inline)]
+    pub use crate::models::rounding::Rounding;
     #[doc(no_inline)]
     pub use crate::models::prayer::Prayer;
     #[doc(no_inline)]
