@@ -5,7 +5,7 @@ plugins {
     alias(libs.plugins.androidLibrary)
     alias(libs.plugins.kotlinAndroid)
     alias(libs.plugins.cargoNdk)
-    `maven-publish`
+    alias(libs.plugins.mavenPublish)
 }
 
 android {
@@ -36,13 +36,6 @@ android {
     kotlinOptions {
         jvmTarget = "1.8"
     }
-
-    publishing {
-        singleVariant("release") {
-            withSourcesJar()
-            withJavadocJar()
-        }
-    }
 }
 
 dependencies {
@@ -72,7 +65,11 @@ cargoNdk {
 
 afterEvaluate {
     android.libraryVariants.all { variant ->
-        val outDir = "${layout.buildDirectory}/generated/source/uniffi/${variant.name}/java"
+        // Resolve buildDirectory to an absolute path. Interpolating the
+        // DirectoryProperty directly yields the literal "property 'buildDir'",
+        // which the generate/copy Exec tasks (run from the repo root) would
+        // create as a stray directory there.
+        val outDir = "${layout.buildDirectory.get().asFile.absolutePath}/generated/source/uniffi/${variant.name}/java"
 
         val generateBindings = tasks.register(
             name = "generate${variant.name.capitalized()}UniFFIBindings",
@@ -103,14 +100,41 @@ afterEvaluate {
     }
 }
 
-configure<PublishingExtension> {
-    publications {
-        create<MavenPublication>("${project.name}-release") {
-            artifactId = "miqat"
+mavenPublishing {
+    publishToMavenCentral()
 
-            afterEvaluate {
-                from(components["release"])
+    // Only sign when a signing key is configured (in-memory key for CI, or a
+    // signing.* keyring locally). This keeps `publishToMavenLocal` dry runs
+    // working without GPG, while Central releases still get signed once
+    // credentials are present. Central rejects unsigned publications.
+    if (project.hasProperty("signingInMemoryKey") || project.hasProperty("signing.keyId")) {
+        signAllPublications()
+    }
+
+    coordinates(GradleConfigs.mavenGroup, "miqat", GradleConfigs.packageVersion)
+
+    pom {
+        name.set("Miqat")
+        description.set("High-precision Islamic prayer time calculation library.")
+        inceptionYear.set(GradleConfigs.inceptionYear)
+        url.set(GradleConfigs.projectUrl)
+        licenses {
+            license {
+                name.set("The Apache License, Version 2.0")
+                url.set("http://www.apache.org/licenses/LICENSE-2.0.txt")
             }
+        }
+        developers {
+            developer {
+                id.set("Ghamza-Jd")
+                name.set("Ghamza-Jd")
+                url.set("https://github.com/Ghamza-Jd")
+            }
+        }
+        scm {
+            url.set(GradleConfigs.projectUrl)
+            connection.set("scm:git:git://github.com/ibad-al-rahman/miqat.git")
+            developerConnection.set("scm:git:ssh://git@github.com/ibad-al-rahman/miqat.git")
         }
     }
 }

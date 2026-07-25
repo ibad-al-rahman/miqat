@@ -4,6 +4,9 @@ kotlin = "1.9.22"
 core-ktx = "1.13.1"
 jna = "5.14.0"
 cargoNdk = "0.3.4"
+# 0.34.0 is the last release supporting AGP 8.0+; 0.35.0 requires AGP 8.2.2 and
+# 0.36.0+ requires AGP 8.13.0. This project is on AGP 8.2.2.
+mavenPublish = "0.34.0"
 
 [libraries]
 core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "core-ktx" }
@@ -13,3 +16,4 @@ jna = { module = "net.java.dev.jna:jna", version.ref = "jna" }
 kotlinAndroid = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 androidLibrary = { id = "com.android.library", version.ref = "agp" }
 cargoNdk = { id = "com.github.willir.rust.cargo-ndk-android", version.ref = "cargoNdk" }
+mavenPublish = { id = "com.vanniktech.maven.publish", version.ref = "mavenPublish" }
