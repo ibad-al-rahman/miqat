@@ -64,6 +64,11 @@ jobs:
         working-directory: android
         run: echo "sdk.dir=$ANDROID_SDK_ROOT" > local.properties
 
+      # The cargoNdk Gradle plugin shells out to the `cargo ndk` subcommand,
+      # which is a separate binary not bundled with the Rust toolchain.
+      - name: Install cargo-ndk
+        run: cargo install cargo-ndk --locked
+
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
 
