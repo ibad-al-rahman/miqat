@@ -128,14 +128,15 @@ android-build release="":
 clean-all: apple-clean android-clean
 	@cargo clean
 
-# Updates the version inside miqat_rslib/Cargo.toml and Package.swift
+# Updates the version inside Cargo.toml, Package.swift and the Android GradleConfig
 [group: 'utils']
 [no-exit-message]
 update-versions version:
-	@echo "Updating miqat versions (rslib and Package.swift) to {{version}}"
+	@echo "Updating miqat versions (Cargo, Package.swift and Android) to {{version}}"
 
-	@sed -i.bak 's/^version = ".*"/version = "'{{version}}'"/' miqat_rslib/Cargo.toml && rm miqat_rslib/Cargo.toml.bak
+	@sed -i.bak 's/^version = ".*"/version = "'{{version}}'"/' Cargo.toml && rm Cargo.toml.bak
 	@sed -i.bak 's/^let releaseTag = ".*"/let releaseTag = "'{{version}}'"/' Package.swift && rm Package.swift.bak
+	@sed -i.bak 's/const val packageVersion = ".*"/const val packageVersion = "'{{version}}'"/' android/buildSrc/src/main/kotlin/GradleConfig.kt && rm android/buildSrc/src/main/kotlin/GradleConfig.kt.bak
 
 	@echo "✓ Updated all miqat versions to {{version}}"
 

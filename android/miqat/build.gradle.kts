@@ -53,6 +53,21 @@ dependencies {
 cargoNdk {
     module = ".."
     librariesNames = arrayListOf("libmiqat.so")
+
+    // Release .so recompiles std with panic=abort (matches the panic="abort"
+    // release profile in miqat_rslib/Cargo.toml). -Zbuild-std needs nightly,
+    // selected via RUSTUP_TOOLCHAIN. Debug stays on stable for fast iteration.
+    // The "release"/"debug" build types are pre-created by the plugin, so we
+    // configure the existing one rather than creating a new one.
+    buildTypes {
+        getByName("release") {
+            extraCargoBuildArguments = arrayListOf("-Z", "build-std=std,panic_abort")
+            extraCargoEnv = mapOf(
+                "RUSTUP_TOOLCHAIN" to "nightly",
+                "RUSTFLAGS" to "-Zunstable-options -Cpanic=immediate-abort"
+            )
+        }
+    }
 }
 
 afterEvaluate {
