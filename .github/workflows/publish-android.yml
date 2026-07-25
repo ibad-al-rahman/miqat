@@ -56,6 +56,14 @@ jobs:
             x86_64-linux-android \
             --toolchain nightly
 
+      # local.properties is gitignored, so it isn't present on the runner. The
+      # Android Gradle Plugin / cargo-ndk read sdk.dir from it to locate the SDK
+      # (and, transitively, the NDK). Generate it from the SDK that
+      # setup-android installed.
+      - name: Write local.properties
+        working-directory: android
+        run: echo "sdk.dir=$ANDROID_SDK_ROOT" > local.properties
+
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
 
