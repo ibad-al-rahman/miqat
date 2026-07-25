@@ -1,0 +1,75 @@
+name: Publish Android to Maven Central
+
+# Manually dispatched release. Publishes the miqat AAR (with the Rust-built
+# native libs for all Android ABIs) to Maven Central under
+# io.github.ibad-al-rahman:miqat:<version>.
+#
+# The version comes from GradleConfigs.packageVersion; this workflow does not
+# bump it. Bump it in a PR first, then dispatch this workflow from the merged
+# commit.
+#
+# Required repository secrets (Settings -> Secrets and variables -> Actions):
+#   MAVEN_CENTRAL_USERNAME       Central Portal user token username
+#   MAVEN_CENTRAL_PASSWORD       Central Portal user token password
+#   SIGNING_IN_MEMORY_KEY        ASCII-armored GPG secret key
+#   SIGNING_IN_MEMORY_KEY_PASSWORD  GPG key passphrase
+# See PUBLISHING.md for how to obtain these.
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Publish to a local Maven repo only (no upload to Central)"
+        type: boolean
+        default: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install NDK 27.3.13750724
+        run: sdkmanager "ndk;27.3.13750724"
+
+      # The release build recompiles std with -Zbuild-std, which requires the
+      # nightly toolchain plus rust-src and the Android targets (the release
+      # cargoNdk config sets RUSTUP_TOOLCHAIN=nightly). The rest of the build
+      # stays on stable, which the toolchain file already pins.
+      - name: Install Rust nightly with Android targets
+        run: |
+          rustup toolchain install nightly --component rust-src
+          rustup target add \
+            aarch64-linux-android \
+            armv7-linux-androideabi \
+            i686-linux-android \
+            x86_64-linux-android \
+            --toolchain nightly
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Publish (dry run — local Maven only)
+        if: ${{ inputs.dry_run }}
+        working-directory: android
+        run: ./gradlew :miqat:publishToMavenLocal --no-configuration-cache
+
+      - name: Publish and release to Maven Central
+        if: ${{ !inputs.dry_run }}
+        working-directory: android
+        run: ./gradlew publishAndReleaseToMavenCentral --no-configuration-cache
+        env:
+          ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+          ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.SIGNING_IN_MEMORY_KEY }}
+          ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.SIGNING_IN_MEMORY_KEY_PASSWORD }}
