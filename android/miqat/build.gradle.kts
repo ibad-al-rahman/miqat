@@ -39,7 +39,13 @@ android {
 }
 
 dependencies {
-    implementation(libs.jna)
+    // JNA must be the Android @aar variant, which ships jni/<abi>/libjnidispatch.so.
+    // The plain jar only bundles desktop/server natives and crashes on Android with
+    // UnsatisfiedLinkError. Version catalogs can't express the @aar artifact type, so
+    // the coordinate is reconstructed inline while the version stays in the catalog.
+    // Declared as implementation (runtime-only) so consumers resolve JNA transitively
+    // without having to declare it themselves.
+    implementation("net.java.dev.jna:jna:${libs.versions.jna.get()}@aar")
     implementation(libs.core.ktx)
 }
 
@@ -135,6 +141,25 @@ mavenPublishing {
             url.set(GradleConfigs.projectUrl)
             connection.set("scm:git:git://github.com/ibad-al-rahman/miqat.git")
             developerConnection.set("scm:git:ssh://git@github.com/ibad-al-rahman/miqat.git")
+        }
+
+        // Gradle drops the artifact type of @aar dependencies from the generated
+        // POM (gradle/gradle#3170), so Maven-based consumers would otherwise fetch
+        // the plain JNA jar (no Android natives). Re-add <type>aar</type> to the
+        // JNA dependency so pure-POM consumers also resolve the Android variant.
+        // Gradle consumers already resolve it correctly via module metadata.
+        withXml {
+            val dependencies = asNode().children()
+                .filterIsInstance<groovy.util.Node>()
+                .firstOrNull { (it.name() as? groovy.namespace.QName)?.localPart == "dependencies" }
+            dependencies?.children()
+                ?.filterIsInstance<groovy.util.Node>()
+                ?.firstOrNull { dependency ->
+                    fun text(name: String) =
+                        (dependency.get(name) as? groovy.util.NodeList)?.text()
+                    text("groupId") == "net.java.dev.jna" && text("artifactId") == "jna"
+                }
+                ?.appendNode("type", "aar")
         }
     }
 }

@@ -2,6 +2,8 @@
 agp = "8.2.2"
 kotlin = "1.9.22"
 core-ktx = "1.13.1"
+# Referenced directly in miqat/build.gradle.kts to append the @aar artifact type,
+# which the version catalog format cannot express.
 jna = "5.14.0"
 cargoNdk = "0.3.4"
 # 0.34.0 is the last release supporting AGP 8.0+; 0.35.0 requires AGP 8.2.2 and
@@ -10,7 +12,6 @@ mavenPublish = "0.34.0"
 
 [libraries]
 core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "core-ktx" }
-jna = { module = "net.java.dev.jna:jna", version.ref = "jna" }
 
 [plugins]
 kotlinAndroid = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
