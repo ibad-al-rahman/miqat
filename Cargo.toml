@@ -3,7 +3,7 @@ resolver = "3"
 members = ["miqat_core", "miqat_rslib", "uniffi-bindgen"]
 
 [workspace.package]
-version = "0.6.0"
+version = "0.6.1"
 authors = ["Hamza Jadid <hamza.jadid@ibad.org.lb>"]
 description = "A Rust native library for computing prayer times based on astronomical calculations"
 readme = "README.md"
