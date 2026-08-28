@@ -148,18 +148,24 @@ mavenPublishing {
         // the plain JNA jar (no Android natives). Re-add <type>aar</type> to the
         // JNA dependency so pure-POM consumers also resolve the Android variant.
         // Gradle consumers already resolve it correctly via module metadata.
+        // Idempotent: newer JNA releases already emit <type>aar</type> from their
+        // own module metadata, so only append when it's missing — otherwise the POM
+        // gets a duplicated <type> tag and publication fails ("Duplicated tag: type").
         withXml {
             val dependencies = asNode().children()
                 .filterIsInstance<groovy.util.Node>()
                 .firstOrNull { (it.name() as? groovy.namespace.QName)?.localPart == "dependencies" }
-            dependencies?.children()
+            val jna = dependencies?.children()
                 ?.filterIsInstance<groovy.util.Node>()
                 ?.firstOrNull { dependency ->
                     fun text(name: String) =
                         (dependency.get(name) as? groovy.util.NodeList)?.text()
                     text("groupId") == "net.java.dev.jna" && text("artifactId") == "jna"
                 }
-                ?.appendNode("type", "aar")
+            val hasType = (jna?.get("type") as? groovy.util.NodeList)?.isNotEmpty() == true
+            if (jna != null && !hasType) {
+                jna.appendNode("type", "aar")
+            }
         }
     }
 }
