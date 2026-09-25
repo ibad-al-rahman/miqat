@@ -109,6 +109,7 @@ mod tests {
         let beirut = Coordinates {
             latitude: 33.8938,
             longitude: 35.5018,
+            elevation: 0.0,
         };
 
         let via_method = PrayerTimes::from_method(timestamp, beirut, Method::MuslimWorldLeague);
