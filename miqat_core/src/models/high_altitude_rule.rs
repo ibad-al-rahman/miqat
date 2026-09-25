@@ -42,6 +42,7 @@ mod tests {
         let location = Coordinates {
             latitude: 48.983226,
             longitude: -3.216649,
+            elevation: 0.0,
         };
 
         assert_eq!(
@@ -55,6 +56,7 @@ mod tests {
         let location = Coordinates {
             latitude: 45.983226,
             longitude: -3.216649,
+            elevation: 0.0,
         };
 
         assert_eq!(

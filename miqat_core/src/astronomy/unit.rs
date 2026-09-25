@@ -194,6 +194,9 @@ impl Div for Angle {
 pub struct Coordinates {
     pub latitude: f64,
     pub longitude: f64,
+    /// Elevation above sea level, in metres. Used to correct the visible
+    /// horizon (horizon dip) when computing sunrise and sunset.
+    pub elevation: f64,
 }
 
 impl Coordinates {
@@ -201,6 +204,15 @@ impl Coordinates {
         Coordinates {
             latitude,
             longitude,
+            elevation: 0.0,
+        }
+    }
+
+    pub fn new_with_elevation(latitude: f64, longitude: f64, elevation: f64) -> Self {
+        Coordinates {
+            latitude,
+            longitude,
+            elevation,
         }
     }
 }

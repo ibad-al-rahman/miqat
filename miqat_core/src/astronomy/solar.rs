@@ -102,7 +102,12 @@ impl SolarTime {
         let prev_solar = SolarCoordinates::new(yesterday.julian_day());
         let solar = SolarCoordinates::new(today.julian_day());
         let next_solar = SolarCoordinates::new(tomorrow.julian_day());
-        let solar_altitude = Angle::new(-50.0 / 60.0);
+        // Standard sunrise/sunset depression is -50′ (refraction + solar
+        // semi-diameter). An observer above sea level sees the horizon drop by
+        // the horizon dip, so the sun must travel further before it appears to
+        // rise or set. dip(degrees) ≈ 0.0293 * sqrt(elevation_in_metres).
+        let dip = 0.0293 * coordinates.elevation.max(0.0).sqrt();
+        let solar_altitude = Angle::new(-50.0 / 60.0 - dip);
         let approx_transit = ops::approximate_transit(
             coordinates.longitude_angle(),
             solar.apparent_sidereal_time,
@@ -300,6 +305,30 @@ mod tests {
         assert_eq!(solar.transit, transit_date);
         assert_eq!(solar.sunrise, sunrise_date);
         assert_eq!(solar.sunset, sunset_date);
+    }
+
+    #[test]
+    fn elevation_shifts_sunrise_earlier_and_sunset_later() {
+        let date = Utc
+            .with_ymd_and_hms(2015, 7, 12, 0, 0, 0)
+            .single()
+            .expect("Invalid date and time provided");
+
+        let sea_level = SolarTime::new(
+            date,
+            Coordinates::new(35.0 + 47.0 / 60.0, -78.0 - 39.0 / 60.0),
+        );
+        let elevated = SolarTime::new(
+            date,
+            Coordinates::new_with_elevation(35.0 + 47.0 / 60.0, -78.0 - 39.0 / 60.0, 1000.0),
+        );
+
+        // At altitude the horizon drops, so sunrise is earlier and sunset later.
+        assert!(elevated.sunrise < sea_level.sunrise);
+        assert!(elevated.sunset > sea_level.sunset);
+
+        // Transit (solar noon) is independent of elevation.
+        assert_eq!(elevated.transit, sea_level.transit);
     }
 
     #[test]
