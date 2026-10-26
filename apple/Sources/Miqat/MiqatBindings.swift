@@ -1040,12 +1040,22 @@ public func FfiConverterTypeCalculationParameters_lower(_ value: CalculationPara
 public struct Coordinates: Equatable, Hashable {
     public let latitude: Double
     public let longitude: Double
+    /**
+     * Elevation above sea level, in metres. Corrects sunrise and sunset for
+     * the horizon dip; pass 0.0 for sea level.
+     */
+    public let elevation: Double
 
     // Default memberwise initializers are never public by default, so we
     // declare one manually.
-    public init(latitude: Double, longitude: Double) {
+    public init(latitude: Double, longitude: Double, 
+        /**
+         * Elevation above sea level, in metres. Corrects sunrise and sunset for
+         * the horizon dip; pass 0.0 for sea level.
+         */elevation: Double) {
         self.latitude = latitude
         self.longitude = longitude
+        self.elevation = elevation
     }
 
     
@@ -1065,13 +1075,15 @@ public struct FfiConverterTypeCoordinates: FfiConverterRustBuffer {
         return
             try Coordinates(
                 latitude: FfiConverterDouble.read(from: &buf), 
-                longitude: FfiConverterDouble.read(from: &buf)
+                longitude: FfiConverterDouble.read(from: &buf), 
+                elevation: FfiConverterDouble.read(from: &buf)
         )
     }
 
     public static func write(_ value: Coordinates, into buf: inout [UInt8]) {
         FfiConverterDouble.write(value.latitude, into: &buf)
         FfiConverterDouble.write(value.longitude, into: &buf)
+        FfiConverterDouble.write(value.elevation, into: &buf)
     }
 }
 
