@@ -36,8 +36,15 @@ jobs:
           distribution: temurin
           java-version: "17"
 
+      # Pass an empty `packages` so the action skips its default
+      # `tools platform-tools` install. Google removed the legacy `tools`
+      # package from the SDK repository, so `sdkmanager tools` now fails with
+      # exit code 1. The NDK (and any other packages we need) are installed
+      # explicitly in the steps below.
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
+        with:
+          packages: ""
 
       - name: Install NDK 27.3.13750724
         run: sdkmanager "ndk;27.3.13750724"
